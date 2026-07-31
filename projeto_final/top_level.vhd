@@ -39,11 +39,11 @@ architecture arch of top_level is
     signal resultado  : unsigned(12 downto 0) := (others => '0');
     
     -- Vetor extra para facilitar a quebra dos 13 bits para os displays
-    signal res_logic  : std_logic_vector(15 downto 0) := (others => '0');
+    signal res_logic  : std_logic_vector(12 downto 0) := (others => '0');
 
 begin
 
-    operando_a <= "0" & "0010" & "10000000";
+    operando_a <= "0" & "0010" & "10000000" -- neg 2 128;
     operando_b <= unsigned("0" & "00" & SW(9 downto 0));
 
     -- Instancia 1: O Somador
@@ -54,29 +54,29 @@ begin
     );
 
     -- Preenchendo com zeros a esquerda para fechar 16 bits (4 blocos de 4)
-    res_logic <= "000" & std_logic_vector(resultado);
+    res_logic <= std_logic_vector(resultado);
 
-    -- Instancia 2: Display 0 (4 bits menos significativos)
+    -- Instancia 2: Display 0 (3 bits menos significativos)
     disp0: hex_to_sseg port map (
-        hex_in   => res_logic(3 downto 0),
+        hex_in   => res_logic(2 downto 0),
         sseg_out => HEX0
     );
 
-    -- Instancia 3: Display 1
+    -- Instancia 3: Display 1 (3 bits menos significativos)
     disp1: hex_to_sseg port map (
-        hex_in   => res_logic(7 downto 4),
+        hex_in   => res_logic(5 downto 3),
         sseg_out => HEX1
     );
 
     -- Instancia 4: Display 2
     disp2: hex_to_sseg port map (
-        hex_in   => res_logic(11 downto 8),
+        hex_in   => res_logic(8 downto 6),
         sseg_out => HEX2
     );
 
     -- Instancia 5: Display 3 (Mais significativos)
     disp3: hex_to_sseg port map (
-        hex_in   => res_logic(15 downto 12),
+        hex_in   => res_logic(11 downto 9),
         sseg_out => HEX3
     );
 
