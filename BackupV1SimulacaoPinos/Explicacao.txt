@@ -1,0 +1,41 @@
+1. Primeiro bloco (De 0 a 10 ns): O Início (Resultado 0280)
+
+O que o Testbench fez (Baixo): Deixou todas as chaves da placa desligadas (0000000000).
+
+A matemática: O somador calculou o resultado 0280.
+
+A Tradução Visual (Cima): O decodificador fatiou o número e enviou os bits para os mostradores virtuais:
+
+HEX0 recebeu 1000000 (Instrução para desenhar o Zero).
+
+HEX1 recebeu 0000000 (Instrução para desenhar o Oito, acendendo tudo).
+
+HEX2 recebeu 0100100 (Instrução para desenhar o Dois).
+
+HEX3 recebeu 1000000 (Instrução para desenhar o Zero à esquerda).
+
+2. Segundo bloco (De 10 a 20 ns): A Primeira Mudança (Resultado 02C0)
+
+O que o Testbench fez (Baixo): Ligou duas chaves específicas (0110000000).
+
+A matemática: O somador atualizou o resultado instantaneamente para 02C0.
+
+A Tradução Visual (Cima): Os displays reagiram à nova conta:
+
+HEX1 mudou para 1000110 (Instrução para desenhar a letra C).
+
+Os outros displays mantiveram seus valores (0, 2, 0), provando que a lógica individual de cada mostrador funciona sem interferir nos vizinhos.
+
+3. Terceiro bloco (De 20 a 30 ns): A Segunda Mudança (Resultado 0395)
+
+O que o Testbench fez (Baixo): Acionou chaves alternadas (1010101010).
+
+A matemática: O somador atualizou para o resultado final: 0395.
+
+A Tradução Visual (Cima): Todos os displays ativos mudaram perfeitamente:
+
+HEX0 mudou para 0010010 (Desenha o Cinco).
+
+HEX1 mudou para 0010000 (Desenha o Nove).
+
+HEX2 mudou para 0110000 (Desenha o Três).
