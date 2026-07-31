@@ -1,0 +1,60 @@
+Fase A.1: Validando a Lógica Matemática (Teste de Unidade)
+Se você quiser testar apenas o núcleo do somador antes de plugar os displays (utilizando os arquivos da pasta BackupV1SimulacaoMatematica):
+
+Abra o Terminal na pasta do backup.
+
+Compile os códigos base:
+
+ghdl -a adder_unsigned.vhd
+
+ghdl -a top_level.vhd
+
+ghdl -a tb_top_level.vhd
+
+Crie o executável e gere o gráfico de ondas:
+
+ghdl -e tb_top_level
+
+ghdl -r tb_top_level --vcd=ondas_matematica.vcd
+
+Abra o GTKWave e carregue o ondas_matematica.vcd para visualizar o somador processando os cálculos puros em hexadecimal ou binário.
+
+Fase A: Rodando a Simulação (GHDL + GTKWave)
+Abra o Terminal/Prompt de Comando na pasta onde estão os arquivos (ex: F:\GHDL\projeto_final).
+
+Compile os códigos digitando a sequência correta (sempre analise as dependências primeiro):
+
+ghdl -a adder_unsigned.vhd
+
+ghdl -a hex_to_sseg.vhd
+
+ghdl -a top_level.vhd
+
+ghdl -a tb_top_level.vhd
+
+Crie o executável da simulação digitando:
+
+ghdl -e tb_top_level
+
+Rode a simulação e gere as ondas digitando:
+
+ghdl -r tb_top_level --vcd=ondas.vcd
+
+Abra o GTKWave, carregue o arquivo novo ondas.vcd que acabou de surgir e veja os gráficos (lembre-se de mudar o Data Format dos displays para Binário).
+
+Fase B: Criando o Projeto Físico (Quartus)
+Abra o Quartus Prime Lite e clique em File > New Project Wizard.
+
+Escolha a pasta com seus arquivos e dê o nome do projeto de top_level. Avance.
+
+Adicione os três arquivos principais (adder_unsigned.vhd, hex_to_sseg.vhd e top_level.vhd). Não adicione o arquivo de testbench. Avance.
+
+Escolha o chip correto da placa: Família MAX 10, Device 10M50DAF484C7G. Vá dando Next até dar Finish.
+
+Agora ensine os pinos ao Quartus: Vá em Assignments > Import Assignments... e selecione nosso arquivo DE10_Lite.qsf.
+
+Dê dois cliques em Compile Design e espere a barra chegar em 100%.
+
+Ligue a placa no USB, abra o Programmer (Tools > Programmer), adicione o arquivo .sof (dentro da pasta output_files recém-criada) e clique em Start.
+
+Pronto! Projeto recriado, compilado e rodando fisicamente em qualquer computador do planeta.
