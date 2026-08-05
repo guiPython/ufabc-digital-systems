@@ -35,17 +35,17 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sw[8]
 set_location_assignment PIN_A14 -to sw[9]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sw[9]
 
-# LEDs Vermelhos (LEDR[0] a LEDR[9])
+# LEDs Vermelhos (LEDR[0] a LEDR[9]) - Corrigidos
 set_location_assignment PIN_A8  -to ledr[0]
 set_location_assignment PIN_A9  -to ledr[1]
 set_location_assignment PIN_A10 -to ledr[2]
 set_location_assignment PIN_B10 -to ledr[3]
-set_location_assignment PIN_D13 -to ledr[4]
-set_location_assignment PIN_C13 -to ledr[5]
-set_location_assignment PIN_E14 -to ledr[6]
-set_location_assignment PIN_D14 -to ledr[7]
-set_location_assignment PIN_A11 -to ledr[8]
-set_location_assignment PIN_B11 -to ledr[9]
+set_location_assignment PIN_A11 -to ledr[4]
+set_location_assignment PIN_B11 -to ledr[5]
+set_location_assignment PIN_C12 -to ledr[6]
+set_location_assignment PIN_D11 -to ledr[7]
+set_location_assignment PIN_C12 -to ledr[8]
+set_location_assignment PIN_A12 -to ledr[9]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ledr*
 
 # HEX0 (Display 0)
