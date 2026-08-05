@@ -1,0 +1,190 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity top_fp_adder is
+    port (
+        clk      : in  std_logic;                     
+        bt_clear : in  std_logic;                     
+        bt_adv   : in  std_logic;                     
+        sw       : in  std_logic_vector(9 downto 0); 
+        hex0, hex1, hex2, hex3, hex4, hex5 : out std_logic_vector(7 downto 0) 
+    );
+end entity top_fp_adder;
+
+architecture rtl of top_fp_adder is
+
+    type state_type is (SET_SIGN_A, SET_FRAC_A, SET_EXP_A, 
+                        SET_SIGN_B, SET_FRAC_B, SET_EXP_B, 
+                        SHOW_RESULT);
+    signal current_state : state_type := SET_SIGN_A;
+
+    signal reg_a, reg_b : unsigned(12 downto 0) := (others => '0');
+    signal result       : unsigned(12 downto 0);
+
+    signal adv_edge, clear_edge : std_logic;
+
+    component hex_to_sseg is
+        port (
+            hex  : in  std_logic_vector(3 downto 0);
+            dp   : in  std_logic;
+            sseg : out std_logic_vector(7 downto 0)
+        );
+    end component;
+
+    component adder_unsigned is
+        port (
+            a, b : in unsigned (12 downto 0);
+            res  : out unsigned (12 downto 0)
+        );
+    end component;
+
+    signal disp_h0, disp_h1, disp_h2, disp_h3, disp_h4, disp_h5 : std_logic_vector(3 downto 0);
+
+begin
+
+    adder_inst : adder_unsigned
+        port map (
+            a   => reg_a,
+            b   => reg_b,
+            res => result
+        );
+
+    -- Detecção de borda para os botões (ativos em '0')
+    process(clk)
+        variable adv_reg, clear_reg : std_logic_vector(1 downto 0) := "11";
+    begin
+        if rising_edge(clk) then
+            adv_reg := adv_reg(0) & bt_adv;
+            clear_reg := clear_reg(0) & bt_clear;
+        end if;
+        
+        if adv_reg = "10" then
+            adv_edge <= '1';
+        else
+            adv_edge <= '0';
+        end if;
+        
+        if clear_reg = "10" then
+            clear_edge <= '1';
+        else
+            clear_edge <= '0';
+        end if;
+    end process;
+
+    -- FSM de Transição das etapas
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if clear_edge = '1' then
+                case current_state is
+                    when SET_FRAC_A  => current_state <= SET_SIGN_A;
+                    when SET_EXP_A   => current_state <= SET_FRAC_A;
+                    when SET_SIGN_B  => current_state <= SET_EXP_A;
+                    when SET_FRAC_B  => current_state <= SET_SIGN_B;
+                    when SET_EXP_B   => current_state <= SET_FRAC_B;
+                    when SHOW_RESULT => current_state <= SET_EXP_B;
+                    when others      => current_state <= SET_SIGN_A;
+                end case;
+            elsif adv_edge = '1' then
+                case current_state is
+                    when SET_SIGN_A =>
+                        reg_a(12) <= sw(9);
+                        current_state <= SET_FRAC_A;
+                    when SET_FRAC_A =>
+                        reg_a(7 downto 0) <= unsigned(sw(9 downto 2));
+                        current_state <= SET_EXP_A;
+                    when SET_EXP_A =>
+                        reg_a(11 downto 8) <= unsigned(sw(3 downto 0));
+                        current_state <= SET_SIGN_B;
+                    when SET_SIGN_B =>
+                        reg_b(12) <= sw(9);
+                        current_state <= SET_FRAC_B;
+                    when SET_FRAC_B =>
+                        reg_b(7 downto 0) <= unsigned(sw(9 downto 2));
+                        current_state <= SET_EXP_B;
+                    when SET_EXP_B =>
+                        reg_b(11 downto 8) <= unsigned(sw(3 downto 0));
+                        current_state <= SHOW_RESULT;
+                    when SHOW_RESULT =>
+                        current_state <= SET_SIGN_A;
+                end case;
+            end if;
+        end if;
+    end process;
+
+    -- Lógica de exibição e conversão para inteiro puro nos displays
+    process(current_state, sw, result)
+        variable frac_val : integer;
+        variable exp_val  : integer;
+        variable int_val  : integer;
+    begin
+        -- Valores padrão
+        disp_h5 <= "0000"; disp_h4 <= "0000"; disp_h3 <= "0000"; 
+        disp_h2 <= "0000"; disp_h1 <= "0000"; disp_h0 <= "0000";
+
+        case current_state is
+            when SET_SIGN_A =>
+                disp_h5 <= "0001";
+
+            when SET_FRAC_A =>
+                disp_h5 <= "0010"; 
+
+            when SET_EXP_A =>
+                disp_h5 <= "0011"; 
+
+            when SET_SIGN_B =>
+                disp_h5 <= "0100"; 
+
+            when SET_FRAC_B =>
+                disp_h5 <= "0101"; 
+
+            when SET_EXP_B =>
+                disp_h5 <= "0110";
+
+            when SHOW_RESULT =>
+                disp_h5 <= "1110"; -- Mostra 'E' indicando resultado
+                
+                -- Extrai fração e expoente do resultado de ponto flutuante
+                frac_val := to_integer(result(7 downto 0));
+                exp_val  := to_integer(result(11 downto 8));
+                
+                -- Calcula o valor inteiro multiplicando a fração pelo expoente de base 2
+                if exp_val >= 12 then
+                    int_val := frac_val * 4096;
+                elsif exp_val = 6 then
+                    int_val := frac_val * 64;
+                elsif exp_val = 5 then
+                    int_val := frac_val * 32;
+                elsif exp_val = 4 then
+                    int_val := frac_val * 16;
+                elsif exp_val = 3 then
+                    int_val := frac_val * 8;
+                elsif exp_val = 2 then
+                    int_val := frac_val * 4;
+                elsif exp_val = 1 then
+                    int_val := frac_val * 2;
+                else
+                    int_val := frac_val;
+                end if;
+
+                -- Exibe o sinal no HEX4 (0 para positivo, 1 para negativo)
+                disp_h4 <= "000" & std_logic_vector(result(12 downto 12)); 
+                
+                -- Distribui o valor inteiro completo em 4 dígitos pelos displays HEX3 até HEX0
+                disp_h3 <= std_logic_vector(to_unsigned((int_val / 4096) mod 16, 4)); -- Milhares
+                disp_h2 <= std_logic_vector(to_unsigned((int_val / 256)  mod 16, 4)); -- Centenas
+                disp_h1 <= std_logic_vector(to_unsigned((int_val / 16)   mod 16, 4)); -- Dezenas
+                disp_h0 <= std_logic_vector(to_unsigned(int_val          mod 16, 4)); -- Unidades
+        end case;
+    end process;
+
+    -- Mapeamento dos 6 displays de 7 segmentos
+    sseg0 : hex_to_sseg port map (hex => disp_h0, dp => '1', sseg => hex0);
+    sseg1 : hex_to_sseg port map (hex => disp_h1, dp => '1', sseg => hex1);
+    sseg2 : hex_to_sseg port map (hex => disp_h2, dp => '1', sseg => hex2);
+    sseg3 : hex_to_sseg port map (hex => disp_h3, dp => '1', sseg => hex3);
+    sseg4 : hex_to_sseg port map (hex => disp_h4, dp => '1', sseg => hex4);
+    sseg5 : hex_to_sseg port map (hex => disp_h5, dp => '1', sseg => hex5);
+
+end architecture rtl;
